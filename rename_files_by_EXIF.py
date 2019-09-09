@@ -3,9 +3,10 @@ import re
 
 import exifread
 
-path_to_folder = r'U:\Fotos\bitte umbenennen\Hannahs Handy am 21.08.2019'
+SIMULATE = True
+path_to_folder = r'U:\Fotos'
 
-extensions = ['.jpg', '.mp4']
+extensions = ['.jpg']  #, '.mp4']
 count = 0
 
 
@@ -29,9 +30,12 @@ def get_new_name(file):
     # print(f'new_name: {new_name}')
 
     if new_name:
+        if SIMULATE:
+            return f'{new_name}{ext}'
         already_exists = (pathlib.Path(path_to_folder) / f'{new_name}{ext}').exists()
         if not already_exists:
-            return f'{new_name}{ext}'
+            new_name = f'{new_name}{ext}'
+            return f'{new_name}'
         else:
             while already_exists:
                 new_name_parts = new_name.split('-')
@@ -42,21 +46,35 @@ def get_new_name(file):
 
                 already_exists = (pathlib.Path(path_to_folder) / f'{new_name}{ext}').exists()
 
-        return f'{new_name}{ext}'
+        new_name = f'{new_name}{ext}'
+        return f'{new_name}'
 
 
 for extension in extensions:
     print(f'working on {extension}')
-    for file in pathlib.Path(path_to_folder).glob(f'*{extension}'):
-        filename_ext = pathlib.Path(file).name
-        if re.match('\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}.', filename_ext):
-            continue
+    for file in pathlib.Path(path_to_folder).rglob(f'*{extension}'):
+        f = pathlib.Path(file)
+        file_folder = f.parent
+        filename_ext = f.name
+        if not SIMULATE:
+            if re.match('\d{4}-\d{2}-\d{2} \d{2}-\d{2}-\d{2}.', filename_ext):
+                continue
 
         new_file = get_new_name(file)
 
-        if new_file:
-            print(file)
-            new_name_path = pathlib.Path(path_to_folder) / f'{new_file}'
-            pathlib.Path(file).replace(new_name_path)
+        if SIMULATE:
+            s = ''
+            if filename_ext[:11] != new_file[:11]:
+                # s = '\tXXX'
+                print(f'filename old: {filename_ext}')
+                print(f'filename new: {new_file}{s}')
+                print(f'{file_folder}')
+                print('-------------------------------------')
+
+        if not SIMULATE:
+            if new_file:
+                # print(file)
+                new_name_path = pathlib.Path(file_folder) / f'{new_file}'
+                pathlib.Path(file).replace(new_name_path)
 
 print('done')
